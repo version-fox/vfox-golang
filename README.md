@@ -13,3 +13,5 @@ This is a [vfox plugin](https://vfox.lhan.me/plugins/create/howto.html) template
 
 1. Push a new tag to the repository which name is `vX.Y.Z` (X.Y.Z is the version number).
 2. The CI will automatically package, then publish [release](https://github.com/version-fox/vfox-plugin-template/releases/tag/v0.0.1) and publish [manifest](https://github.com/version-fox/vfox-plugin-template/releases/tag/manifest).
+## Note
+This is the golang sdk plugin library for vfox, which is still in testing. It will be registered within vfox when everything is ready! If you would like to test the vfox plugin template together, please go to (https://github.com/version-fox/vfox-plugin-template) and create your own sdk template using the template creation!
