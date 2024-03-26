@@ -40,8 +40,3 @@ PLUGIN.manifestUrl = "https://github.com/version-fox/vfox-golang/releases/downlo
 PLUGIN.notes = {
     "",
 }
-=======
--- minimum compatible vfox version
-PLUGIN.minRuntimeVersion = "0.2.2"
--- legacy filenames
-PLUGIN.notes ={}
