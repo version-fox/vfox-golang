@@ -19,7 +19,4 @@ PLUGIN.description = ""
 -- minimum compatible vfox version
 PLUGIN.minRuntimeVersion = "0.2.2"
 -- legacy filenames
-PLUGIN.notes ={
-    "some thing",
-    "some thing",
-}
+PLUGIN.notes ={}
