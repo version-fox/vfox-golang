@@ -4,8 +4,6 @@ PLUGIN = {}
 --- !!! MUST BE SET !!!
 --- Plugin name
 PLUGIN.name = "golang"
---- Plugin author
-PLUGIN.author = "ShizheChang"
 --- Plugin version
 PLUGIN.version = "0.1.0"
 --- Plugin homepage
@@ -13,7 +11,7 @@ PLUGIN.homepage = "https://github.com/version-fox/vfox-golang"
 --- Plugin license, please choose a correct license according to your needs.
 PLUGIN.license = "Apache 2.0"
 --- Plugin description
-PLUGIN.description = ""
+PLUGIN.description = "Golang plugin, https://go.dev/dl/"
 
 
 --- !!! OPTIONAL !!!
@@ -38,5 +36,4 @@ NOTE:
 PLUGIN.manifestUrl = "https://github.com/version-fox/vfox-golang/releases/download/manifest/manifest.json"
 -- Some things that need user to be attention!
 PLUGIN.notes = {
-    "",
 }
