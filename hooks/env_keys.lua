@@ -7,6 +7,10 @@ function PLUGIN:EnvKeys(ctx)
     local mainPath = ctx.path
     return {
         {
+            key = "GOROOT",
+            value = mainPath
+        },
+        {
             key = "PATH",
             value = mainPath .. "/bin"
         }
