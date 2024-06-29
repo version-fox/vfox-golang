@@ -11,8 +11,16 @@ function PLUGIN:EnvKeys(ctx)
             value = mainPath
         },
         {
+            key = "GOPATH",
+            value = mainPath .. "/packages"
+        },
+        {
             key = "PATH",
             value = mainPath .. "/bin"
+        },
+        {
+            key = "PATH",
+            value = mainPath .. "/packages/bin"
         }
     }
 end
