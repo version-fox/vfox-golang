@@ -5,7 +5,7 @@ PLUGIN = {}
 --- Plugin name
 PLUGIN.name = "golang"
 --- Plugin version
-PLUGIN.version = "0.3.0"
+PLUGIN.version = "0.4.0"
 --- Plugin homepage
 PLUGIN.homepage = "https://github.com/version-fox/vfox-golang"
 --- Plugin license, please choose a correct license according to your needs.
