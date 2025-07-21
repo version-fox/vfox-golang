@@ -1,4 +1,5 @@
 require("utils")
+require("os")
 --- Returns some pre-installed information, such as version number, download address, local files, etc.
 --- If checksum is provided, vfox will automatically check it for you.
 --- @param ctx table
@@ -6,7 +7,8 @@ require("utils")
 --- @return table Version information
 function PLUGIN:PreInstall(ctx)
     local version = ctx.version
-    local releases = getReleases()
+    local mirror = os.getenv("VFOX_GOLANG_MIRROR")
+    local releases = getReleases(mirror)
     if version == "latest" then
         return releases[1]
     end

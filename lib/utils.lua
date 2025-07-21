@@ -24,8 +24,9 @@ function getOsTypeAndArch()
     }
 end
 
-function getReleases()
+function getReleases(mirror)
     local result = {}
+    local GOLANG_DOWNLOAD_URL = mirror or GOLANG_URL
     local resp, err = http.get({
         url = GOLANG_URL .. "?mode=json"
     })
@@ -39,7 +40,7 @@ function getReleases()
             if file.kind == "archive" and file.os == RUNTIME.osType and file.arch == RUNTIME.archType then
                 table.insert(result, {
                     version = v,
-                    url = GOLANG_URL .. file.filename,
+                    url = GOLANG_DOWNLOAD_URL .. file.filename,
                     note = "stable",
                     sha256 = file.sha256,
                 })
@@ -68,7 +69,7 @@ function getReleases()
                 if kind == "Archive" and os == type.osType and arch == type.archType then
                     table.insert(result, {
                         version = string.sub(versionStr, 3),
-                        url = GOLANG_URL .. filename,
+                        url = GOLANG_DOWNLOAD_URL .. filename,
                         note = "",
                         sha256 = checksum,
                     })
