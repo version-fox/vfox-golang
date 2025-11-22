@@ -13,3 +13,6 @@ For example:
 ```bash
 VFOX_GOLANG_MIRROR=https://mirrors.aliyun.com/golang/ vfox install golang
 ```
+
+or you can use following mirror:
+- https://golang.google.cn/dl/
