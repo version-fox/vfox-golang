@@ -5,22 +5,28 @@
 --- @field ctx.path string SDK installation directory
 function PLUGIN:EnvKeys(ctx)
     local mainPath = ctx.path
-    return {
+    -- Do not inherit GOPATH: it may have been exported by a previous vfox SDK.
+    local gopath = os.getenv("VFOX_GOLANG_GOPATH")
+    if gopath == nil or gopath == "" then
+        gopath = mainPath .. "/packages"
+    end
+    local result = {
         {
             key = "GOROOT",
-            value = mainPath
+            value = mainPath,
         },
         {
             key = "GOPATH",
-            value = mainPath .. "/packages"
+            value = gopath,
         },
         {
             key = "PATH",
-            value = mainPath .. "/bin"
+            value = mainPath .. "/bin",
         },
-        {
-            key = "PATH",
-            value = mainPath .. "/packages/bin"
-        }
     }
+    local separator = RUNTIME.osType == "windows" and ";" or ":"
+    for path in gopath:gmatch("[^" .. separator .. "]+") do
+        table.insert(result, { key = "PATH", value = path:gsub("[/\\]+$", "") .. "/bin" })
+    end
+    return result
 end

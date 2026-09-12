@@ -17,6 +17,22 @@ VFOX_GOLANG_MIRROR=https://mirrors.aliyun.com/golang/ vfox install golang
 or you can use following mirror:
 - https://golang.google.cn/dl/
 
+## Shared or custom GOPATH
+
+By default each Go version has its own `GOPATH` under its installation directory.
+Set `VFOX_GOLANG_GOPATH` before activating vfox to share packages and installed
+commands across Go versions:
+
+```bash
+export VFOX_GOLANG_GOPATH="$HOME/go"
+```
+
+On PowerShell, use `$env:VFOX_GOLANG_GOPATH = "$HOME\go"` before activation.
+Multiple paths use `:` on Unix or `;` on Windows. Their `bin` directories are
+added to PATH. Existing packages are not moved; Go creates directories as needed.
+Unset this variable to restore per-version storage. The plugin deliberately does
+not inherit `GOPATH`, which may point to a previously selected vfox Go version.
+
 ## Releasing this plugin
 
 Maintainers can publish from **Actions → Plugin → Run workflow** on the default
