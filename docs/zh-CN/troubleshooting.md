@@ -7,9 +7,9 @@
 | 你看到的 | 含义 |
 | --- | --- |
 | `install requires specifying a version for golang` | 执行了不带版本的 `vfox install golang`。照 `vfox search golang` 列出的写法写一个版本。 |
-| `No Go release found for "1.24" on linux/amd64. ...` | 未发布。你写的版本不是列表里的任何一个版本。`1.24` 和 `1` 都不是版本，go.dev 从未发布过的版本也不是。请写完整的版本，见[命名](versions.md#命名)。0.4.1 及之前的版本在这里会打印 `Install golang@ success!`，却什么也没装。 |
-| `plugin [PreInstall] method error: cannot list the Go releases: Get "https://go.dev/dl/?mode=json": ...` | 未发布。插件连不上 go.dev。`[Available]` 的同样报错来自 `vfox search`。镜像在这里帮不上忙，因为版本列表始终来自 go.dev。如果提示以 `(after 3 attempts)` 结尾，说明插件请求了三次，go.dev 一次也没有应答。见[网络](#网络)和[请求很慢或者失败](#请求很慢或者失败)。0.4.1 及之前的版本，提示以 `paring release info failed.` 开头。 |
-| `cannot list the Go releases: https://go.dev/dl/?mode=json answered with status 503` | 未发布。go.dev 有回应，但状态不是 200。状态为 500 及以上时会再请求，三次的回应都是这样时，提示以 `(after 3 attempts)` 结尾；其他状态，例如 404，则直接结束。过一会儿再试。0.4.1 及之前的版本没有写出状态，而是以 `cannot perform concat operation between string and nil` 失败。 |
+| `No Go release found for "1.24" on linux/amd64. ...` | 你写的版本不是列表里的任何一个版本。`1.24` 和 `1` 都不是版本，go.dev 从未发布过的版本也不是。请写完整的版本，见[命名](versions.md#命名)。0.4.1 及之前的版本在这里会打印 `Install golang@ success!`，却什么也没装。 |
+| `plugin [PreInstall] method error: cannot list the Go releases: Get "https://go.dev/dl/?mode=json": ...` | 插件连不上 go.dev。`[Available]` 的同样报错来自 `vfox search`。镜像在这里帮不上忙，因为版本列表始终来自 go.dev。如果提示以 `(after 3 attempts)` 结尾，说明插件请求了三次，go.dev 一次也没有应答。见[网络](#网络)和[请求很慢或者失败](#请求很慢或者失败)。0.4.1 及之前的版本，提示以 `paring release info failed.` 开头。 |
+| `cannot list the Go releases: https://go.dev/dl/?mode=json answered with status 503` | go.dev 有回应，但状态不是 200。状态为 500 及以上时会再请求，三次的回应都是这样时，提示以 `(after 3 attempts)` 结尾；其他状态，例如 404，则直接结束。过一会儿再试。0.4.1 及之前的版本没有写出状态，而是以 `cannot perform concat operation between string and nil` 失败。 |
 | `failed to download golang@1.24.1 file, err:Get "<地址>": ...` | 无法从 `<地址>` 下载压缩包。用了 [`VFOX_GOLANG_MIRROR`](mirror.md) 时，地址以镜像开头；如果写成 `...golanggo1.24.1...`，说明镜像末尾少了 `/`。 |
 | `Checksum error, file: ...` | 收到的文件不是 go.dev 给出 SHA-256 的那个文件。镜像或代理给了别的东西，或者下载损坏了。重新安装，并试试不用镜像。 |
 | `plugin named golang already exists` | 插件已经添加过，又执行了 `vfox add golang`，见[从源码安装](install-from-source.md#已经添加过-golang-时)。 |
@@ -29,7 +29,7 @@ vfox config proxy.enable true
 
 ### 请求很慢或者失败
 
-未发布：向 go.dev 发出的请求失败，或者 go.dev 回应服务器错误（状态为 500 及以上）时，插件会再请求一次，一共最多三次，一次紧接着一次。其他状态，例如 404，就是 go.dev 的回答，不会再请求。
+向 go.dev 发出的请求失败，或者 go.dev 回应服务器错误（状态为 500 及以上）时，插件会再请求一次，一共最多三次，一次紧接着一次。其他状态，例如 404，就是 go.dev 的回答，不会再请求。
 
 vfox 会在 TLS 握手超过 10 秒时以 `net/http: TLS handshake timeout` 结束它，它的 http 模块也不会重试。只有第一次很慢的连接，例如经过一个第一次连接 go.dev 很慢的代理，过去会让 `vfox install golang@1.27.3` 停在这里，而同一条命令第二次运行就通过了。现在第二次尝试由插件自己来做，`vfox install` 会继续下去。0.4.1 及之前的版本对每个请求只发一次，所以要重新运行命令。
 
@@ -52,7 +52,7 @@ vfox 会把 `vfox search golang` 的结果缓存 12 小时。`vfox install` 不�
 | 版本的包和命令 | 版本里的 `packages` 和 `packages/bin`，除非设置了 [`VFOX_GOLANG_GOPATH`](gopath.md) |
 | 插件 | `~/.vfox/plugin/golang` |
 
-`VFOX_HOME` 会移动 `plugin` 和 `cache`，也就是插件和各个版本。`sdks`（选中版本的链接所在）仍然在 `~/.vfox`，`config.yaml` 和 `tmp` 也是（vfox 1.0.13）。`VFOX_HOME` 指向的目录要在 `vfox add` 之前就存在。未发布：路径里有空格没有关系。0.4.1 及之前的版本遇到空格，会把 `packages/bin` 目录创建在错误的位置。在 Windows 上，这要 vfox 1.0.13 及以后才成立，见[已知缺陷](development.md#已知缺陷)。
+`VFOX_HOME` 会移动 `plugin` 和 `cache`，也就是插件和各个版本。`sdks`（选中版本的链接所在）仍然在 `~/.vfox`，`config.yaml` 和 `tmp` 也是（vfox 1.0.13）。`VFOX_HOME` 指向的目录要在 `vfox add` 之前就存在。路径里有空格没有关系。0.4.1 及之前的版本遇到空格，会把 `packages/bin` 目录创建在错误的位置。在 Windows 上，这要 vfox 1.0.13 及以后才成立，见[已知缺陷](development.md#已知缺陷)。
 
 想看 vfox 对 hook 做了什么，以及它吞掉的错误，用 `vfox --debug` 运行：
 

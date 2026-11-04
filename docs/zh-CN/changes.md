@@ -2,9 +2,9 @@
 
 [中文](changes.md) | [English](../changes.md)
 
-按发布版本列出用户能感受到的变化。GitHub 的 Release 页面列出了对应的 PR。写这篇文档时最新的发布版是 0.4.1，`main` 比它多出“未发布”下面的所有内容。想现在就用上这些变化，见 [install-from-source.md](install-from-source.md)。
+按发布版本列出用户能感受到的变化。GitHub 的 Release 页面列出了对应的 PR。
 
-## 未发布
+## 0.4.2（2026-11-04）
 
 - 不是版本的写法会让安装停下来。`vfox install golang@1.24`、`golang@1`，以及 go.dev 从未发布过的版本（例如 `golang@1.99.99`），都会以 ``No Go release found for "1.24" on linux/amd64. `vfox search golang` lists the releases.`` 失败，什么也不装。0.4.1 会打印 `Install golang@ success!` 并以 0 退出，尽管什么也没装。`1.24` 和 `1` 都不是版本：1.24 系列的第一个版本叫 `1.24.0`，`vfox search golang` 列出的是每个名字该怎么写。见 [versions.md](versions.md#命名)（[#23](https://github.com/version-fox/vfox-golang/pull/23)）。
 - 版本目录的路径里有空格，例如家目录是 `/home/John Doe`，或者 `VFOX_HOME` 里有空格，不会再让 `PostInstall` 出错。0.4.1 把不带引号的路径交给 `mkdir`，于是每个词建出一个目录，建在错误的位置，版本里的 `packages/bin` 却没有建出来。`go install` 第一次安装命令时会自己创建这个目录，所以别的都没有坏。现在路径加了引号。在 Windows 上，这些引号需要 vfox 1.0.13 或更高版本，它把命令原样交给 `cmd`（[vfox#712](https://github.com/version-fox/vfox/pull/712)）。vfox 1.0.12 及之前会把引号弄坏，所以带空格的路径在那里仍然得不到它的 `packages/bin`，没有空格的路径则和以前一样可用。见 [development.md](development.md#已知缺陷)（[#23](https://github.com/version-fox/vfox-golang/pull/23)）。

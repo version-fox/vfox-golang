@@ -1,6 +1,6 @@
 # Fixtures
 
-Offline copies of what the hooks ask go.dev for, which `tests/available_test.lua` and `tests/pre_install_test.lua` answer the plugin's HTTP requests with. Taken on 2026-11-04, trimmed to a few releases and platforms. The markup and the checksums are go.dev's own.
+Offline copies of what the hooks ask go.dev for, which `tests/releases_test.lua` answers the plugin's HTTP requests with. Taken on 2026-11-04, trimmed to a few releases and platforms. The markup and the checksums are go.dev's own.
 
 | File | From | Holds |
 | --- | --- | --- |
