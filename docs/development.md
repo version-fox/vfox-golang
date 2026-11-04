@@ -45,6 +45,8 @@ vfox loads `metadata.lua`, calls a hook when a command needs it, and puts `PLUGI
 
 Both are filtered by `RUNTIME.osType` and `RUNTIME.archType`; the page names them differently (`macOS`, `x86-64`, `ARM64`), which `getOsTypeAndArch` translates. A mirror (`VFOX_GOLANG_MIRROR`) replaces only the address in front of the file name, and the two requests do not change.
 
+Both go through `fetch`, which makes a request again when it fails or gets a status of 500 or more, up to `ATTEMPTS` (3) in all. Any other status that is not 200 fails at once, and a page that was had is not asked for again when the other one is. The error is the last failure, with `(after 3 attempts)` when there was more than one. The http module of vfox does not try again and ends a TLS handshake after 10 seconds, so without this a connection that is slow only the first time, such as the first one through a local proxy, stops the command, and the same command works when run again.
+
 `PreInstall` takes `latest`, or the entry whose version is equal to the one the user typed. It returns `version`, `url`, `note` and the `sha256` of the entry.
 
 ## Contracts
@@ -72,7 +74,7 @@ Run it from the repository root. The Test Plugin workflow installs the release p
 
 A test file calls `test.load()` from `vfox.test` once, and calls the real hooks through what it returns, as in `plugin:EnvKeys({ path = "/sdk/go" })`. `test.load` takes the platform (`os`, `arch`), the environment variables (`env`) and a function that answers every HTTP request (`http`); the modules in `lib` can be required after it, and `RUNTIME.osType` can be changed to try another platform. See vfox's [Test and debug a plugin](https://vfox.dev/plugins/create/testing.html). The context and the result of a hook go through the decoding vfox does, so a hook that returns a bare string where vfox wants a table fails the test.
 
-`tests/releases_test.lua` answers the two requests of `getReleases` from `tests/fixtures`, and has a case change an answer to see how the plugin takes a failure or a status other than 200; a request it has no answer for fails the test. It also changes `os.getenv` for `VFOX_GOLANG_MIRROR`, and `RUNTIME` for the platform. The checksums it expects are go.dev's own, written into the file, so a plugin that reads the wrong cell fails.
+`tests/releases_test.lua` answers the two requests of `getReleases` from `tests/fixtures`, and has a case change an answer to see how the plugin takes a failure or a status other than 200, or queue answers that come once each before the answer stands, a request that fails and then goes through, to see that it is made again and how often; a request it has no answer for fails the test. It also changes `os.getenv` for `VFOX_GOLANG_MIRROR`, and `RUNTIME` for the platform. The checksums it expects are go.dev's own, written into the file, so a plugin that reads the wrong cell fails.
 
 The VM disables `os.execute` and `io.popen`, and `PostInstall` runs `mkdir`. `tests/post_install_test.lua` replaces `os.execute` before it loads the plugin, by a function that keeps the command, and checks the command for each platform, paths with a space and a quote in them included. The E2E tests run the command for real, on Linux and on Windows.
 
@@ -95,6 +97,7 @@ The lint, the E2E tests and the dev container are in [e2e.md](e2e.md).
 - **`VFOX_GOLANG_MIRROR` needs the `/` at its end.** The plugin appends the file name to the value as it is, so a mirror without one makes a broken address, see [mirror.md](mirror.md). Nothing in the suite checks this one.
 - **On Windows, a path with a space needs vfox 1.0.13 or later.** The quotes `PostInstall` puts around it are spoiled on their way to `cmd` by vfox 1.0.12 and before (see Contracts), so the directory is not made where it should be. Nothing else breaks: `go install` makes the directory the first time it installs a command, and an entry of the `PATH` that is not there yet does no harm. The Windows E2E tests run the newest vfox only.
 - **A mirror serves the archives only.** The list of releases and their checksums always come from go.dev, so a mirror does not help where go.dev is out of reach.
+- **The attempts of a request do not pause.** vfox gives a plugin no sleep, and `os.execute("sleep ...")` is a Unix command. A failure that waited out its 10 seconds for the handshake has paused enough, but a server error that needs a moment to pass can use up all three attempts in a blink. The suite checks the retry against saved answers only, and no test makes a real request fail. By hand, the http module of vfox goes through the proxy that `HTTPS_PROXY` names, so a proxy whose first tunnel never answers reproduces a slow first connection.
 
 ## License headers
 
@@ -104,7 +107,7 @@ Every source file starts with the Apache-2.0 header of `.licenserc.yaml` (`Copyr
 
 A maintainer publishes from **Actions → Plugin → Run workflow** on the default branch, entering a stable plugin version without the `v` prefix. The shared workflow, [plugin-manifest-action](https://github.com/version-fox/plugin-manifest-action), updates `metadata.lua`, creates the version commit and the tag, and publishes the ZIP and the manifest in this repository. No local tag or extra release token is needed. Pull requests run the checks only; PR titles no longer trigger publication.
 
-Pushing a version tag publishes too, when `PLUGIN.version` already matches the tag. If publication fails, re-run the original failed job to resume it. The workflow follows the shared `@v1` release tool, and updating the tool does not release this plugin. See the [shared workflow documentation](https://github.com/version-fox/plugin-manifest-action) for the package contract and the requirements of a first rollout.
+Pushing a version tag publishes too, when `PLUGIN.version` already matches the tag. If publication fails, re-run the original failed job to resume it. The workflow follows the shared `@v1` release tool, and updating the tool does not release this plugin. See the [shared workflow documentation](https://github.com/version-fox/plugin-manifest-action) for the package contract and the requirements of a first rollout. Afterwards `plugins/golang.json` in [vfox-plugins](https://github.com/version-fox/vfox-plugins) shows the version that `vfox add golang` serves. The registry takes a release over when it syncs, which it does every hour, so that can take an hour or so.
 
 The package holds `metadata.lua`, `hooks/` and `lib/`, and the license. Documentation, tests, workflows and the dev container are not part of it. Because `stylua.toml` is in the repository, the shared check also runs StyLua 2.5.2 over the Lua, so format with that version before you push, see [e2e.md](e2e.md#local-checks).
 

@@ -67,6 +67,16 @@ export VFOX_GOLANG_GOPATH="$HOME/go"
 
 在 PowerShell 里，激活之前执行 `$env:VFOX_GOLANG_GOPATH = "$HOME\go"`。多个路径在 Unix 上用 `:` 分隔，在 Windows 上用 `;` 分隔，每个路径的 `bin` 目录都会加进 `PATH`。已有的包不会被移动，Go 会按需创建目录。取消设置这个变量，就回到每个版本一个 `GOPATH`。插件有意不继承环境里的 `GOPATH`，因为它可能指向之前选中的某个 vfox Go 版本。详见 [docs/zh-CN/gopath.md](docs/zh-CN/gopath.md)。
 
+## 发布这个插件
+
+维护者在默认分支上从 **Actions → Plugin → Run workflow** 发布新版本，输入不带 `v` 前缀的稳定插件版本 `X.Y.Z`。也可以在终端里发起：
+
+```bash
+gh workflow run publish.yaml --repo version-fox/vfox-golang --ref main -f version=X.Y.Z
+```
+
+共享工作流 [plugin-manifest-action](https://github.com/version-fox/plugin-manifest-action) 会更新 `metadata.lua` 里的 `PLUGIN.version`，创建版本提交和 tag，并在本仓库发布 ZIP 和 manifest。不需要本地 tag，也不需要额外的发布令牌；Pull request 只运行检查。版本发布之后，把 [docs/zh-CN/changes.md](docs/zh-CN/changes.md) 里“未发布”下面的条目移到新版本下面。用 tag 发布、失败后续上、包里有什么，以及 `vfox add golang` 什么时候能装到新版本，见 [docs/zh-CN/development.md](docs/zh-CN/development.md#发布)。
+
 ## 文档
 
 **使用插件**

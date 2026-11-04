@@ -8,8 +8,8 @@
 | --- | --- |
 | `install requires specifying a version for golang` | `vfox install golang` without a version. Write one, as `vfox search golang` lists it. |
 | `No Go release found for "1.24" on linux/amd64. ...` | Unreleased. The version you wrote is no release in the list. `1.24` and `1` are no releases, and neither is one that go.dev never published. Write the full release, see [Naming](versions.md#naming). Release 0.4.1 and before print `Install golang@ success!` here, and install nothing. |
-| `plugin [PreInstall] method error: cannot list the Go releases: Get "https://go.dev/dl/?mode=json": ...` | Unreleased. The plugin could not reach go.dev. The same error from `[Available]` comes from `vfox search`. A mirror does not help here, because the list of releases always comes from go.dev. See [Network](#network). Release 0.4.1 and before begin the message with `paring release info failed.` |
-| `cannot list the Go releases: https://go.dev/dl/?mode=json answered with status 503` | Unreleased. go.dev answered, but not with status 200. Try again a little later. Release 0.4.1 and before fail with `cannot perform concat operation between string and nil` instead of naming the status. |
+| `plugin [PreInstall] method error: cannot list the Go releases: Get "https://go.dev/dl/?mode=json": ...` | Unreleased. The plugin could not reach go.dev. The same error from `[Available]` comes from `vfox search`. A mirror does not help here, because the list of releases always comes from go.dev. If the message ends with `(after 3 attempts)`, the plugin asked three times and go.dev did not answer any of them. See [Network](#network) and [Slow or failing requests](#slow-or-failing-requests). Release 0.4.1 and before begin the message with `paring release info failed.` |
+| `cannot list the Go releases: https://go.dev/dl/?mode=json answered with status 503` | Unreleased. go.dev answered, but not with status 200. A status of 500 or more is asked for again, and the message ends with `(after 3 attempts)` when all three answers were of that kind; any other status, a 404 for example, ends it at once. Try again a little later. Release 0.4.1 and before fail with `cannot perform concat operation between string and nil` instead of naming the status. |
 | `failed to download golang@1.24.1 file, err:Get "<address>": ...` | The archive could not be downloaded from `<address>`. With [`VFOX_GOLANG_MIRROR`](mirror.md) the address starts with the mirror; if it reads `...golanggo1.24.1...`, the mirror lacks the `/` at its end. |
 | `Checksum error, file: ...` | The file that arrived is not the one go.dev lists the SHA-256 of. A mirror or a proxy served something else, or the download was damaged. Install again, and try without the mirror. |
 | `plugin named golang already exists` | `vfox add golang` when it is added already, see [Install from source](install-from-source.md#when-golang-is-already-added). |
@@ -26,6 +26,18 @@ vfox config proxy.enable true
 ```
 
 `vfox config --list` shows the settings, and `vfox config proxy.enable false` turns the proxy off again. A proxy that cannot be reached is named by the messages above (`proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused`).
+
+### Slow or failing requests
+
+Unreleased: the plugin makes a request to go.dev again when it fails, or when go.dev answers with a server error (a status of 500 or more), up to three attempts in all, one right after the other. Any other status, a 404 for example, is go.dev's answer and is not made again.
+
+vfox ends a TLS handshake that takes more than 10 seconds, with `net/http: TLS handshake timeout`, and its http module does not try again. A connection that is slow only the first time, through a proxy that is slow to open its first connection to go.dev for one, used to stop `vfox install golang@1.27.3` there, and the same command went through the second time. Now the second attempt is the plugin's own, and `vfox install` goes on. Release 0.4.1 and before make each request once, so the command has to be run again.
+
+When all three attempts fail, the message is the last failure followed by `(after 3 attempts)`. Where each attempt waits out the handshake, that takes about 30 seconds. Then go.dev, or the proxy in front of it, is out of reach and not only slow: see Network above for a proxy. From the same shell, this shows the status go.dev answers with and how long the TLS handshake takes:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}, TLS handshake done after %{time_appconnect}s\n' 'https://go.dev/dl/?mode=json'
+```
 
 ## `vfox search` shows an old list
 

@@ -29,11 +29,15 @@ local PAGE_URL = "https://go.dev/dl/"
 -- What go.dev answers, by address. A case replaces an answer to see how the plugin takes it, and an address that is
 -- not here is a request the plugin must not make.
 local answers = {}
+-- Answers that come once each, in this order, before the answer of the address stands: a request that fails, and then
+-- goes through.
+local queued = {}
 local function reset()
     answers = {
         [JSON_URL] = { status_code = 200, body = read("dl.json"), headers = {} },
         [PAGE_URL] = { status_code = 200, body = read("dl.html"), headers = {} },
     }
+    queued = {}
 end
 
 local requested
@@ -42,7 +46,7 @@ local plugin = test.load({
     arch = "amd64",
     http = function(request)
         requested[#requested + 1] = request.url
-        local answer = answers[request.url]
+        local answer = table.remove(queued[request.url] or {}, 1) or answers[request.url]
         if answer == nil then
             return nil, "unexpected request for " .. request.url
         end
@@ -78,6 +82,17 @@ end
 
 local function contains(text, part)
     return text:find(part, 1, true) ~= nil
+end
+
+--- How many times the plugin asked for an address.
+local function asked(url)
+    local times = 0
+    for _, address in ipairs(requested) do
+        if address == url then
+            times = times + 1
+        end
+    end
+    return times
 end
 
 --- Calls a hook that has to fail, and returns what it says.
@@ -245,6 +260,72 @@ case("An answer other than 200 is reported with its status, not with a failure o
     message = failure(plugin.Available, {})
     assert(contains(message, "404") and contains(message, PAGE_URL), message)
     assert(not contains(message, "concat"), message)
+end)
+
+-- What vfox's http module reports when the handshake takes more than the 10 seconds Go gives it: the first request
+-- of `vfox install golang@1.27.3` fails like this where go.dev is reached through a proxy that is slow on its first
+-- connection, and a second `vfox install` right after goes through.
+local HANDSHAKE_TIMEOUT = "net/http: TLS handshake timeout"
+
+case("A request that fails is made again, so a failure that passes the next time does not stop the command", function()
+    setup("linux", "amd64")
+    queued[JSON_URL] = { { failure = HANDSHAKE_TIMEOUT } }
+    local release = plugin:PreInstall({ version = "1.27.3" })
+    assert(release.version == "1.27.3" and release.sha256 == DIGESTS.stable, tostring(release.version))
+    assert(asked(JSON_URL) == 2, "asked for the JSON " .. asked(JSON_URL) .. " times, not 2")
+    assert(asked(PAGE_URL) == 1, "asked for the page " .. asked(PAGE_URL) .. " times, not 1")
+
+    -- The same for `vfox search`.
+    setup("linux", "amd64")
+    queued[JSON_URL] = { { failure = HANDSHAKE_TIMEOUT } }
+    assert(#plugin:Available({}) == 5)
+end)
+
+case("Each request is made again by itself, and an answer that was had is not asked for twice", function()
+    setup("linux", "amd64")
+    queued[PAGE_URL] = { { failure = "connection reset by peer" }, { failure = HANDSHAKE_TIMEOUT } }
+    local release = plugin:PreInstall({ version = "1.24.0" })
+    assert(release.version == "1.24.0" and release.sha256 == DIGESTS.linux_amd64, tostring(release.version))
+    assert(asked(JSON_URL) == 1, "asked for the JSON " .. asked(JSON_URL) .. " times, not 1")
+    assert(asked(PAGE_URL) == 3, "asked for the page " .. asked(PAGE_URL) .. " times, not 3")
+end)
+
+case("A server error is made again, and a status that is not one is the answer of go.dev", function()
+    setup("linux", "amd64")
+    queued[JSON_URL] = {
+        { status_code = 502, body = "Bad Gateway", headers = {} },
+        { status_code = 503, body = "Service Unavailable", headers = {} },
+    }
+    assert(plugin:PreInstall({ version = "latest" }).version == "1.27.3")
+    assert(asked(JSON_URL) == 3, "asked for the JSON " .. asked(JSON_URL) .. " times, not 3")
+
+    for _, status in ipairs({ 403, 404, 429 }) do
+        setup("linux", "amd64")
+        answers[JSON_URL] = { status_code = status, body = "no", headers = {} }
+        local message = failure(plugin.Available, {})
+        assert(contains(message, tostring(status)), message)
+        assert(asked(JSON_URL) == 1, status .. ": asked for the JSON " .. asked(JSON_URL) .. " times, not 1")
+        assert(not contains(message, "attempts"), message)
+    end
+end)
+
+case("The retries end: three attempts, and the failure of the last one is reported with their number", function()
+    setup("linux", "amd64")
+    queued[JSON_URL] = { { failure = "first failure" }, { failure = "second failure" } }
+    answers[JSON_URL] = { failure = HANDSHAKE_TIMEOUT }
+    local message = failure(plugin.PreInstall, { version = "1.27.3" })
+    assert(asked(JSON_URL) == 3, "asked for the JSON " .. asked(JSON_URL) .. " times, not 3")
+    assert(asked(PAGE_URL) == 0, "the page is not asked for when the JSON cannot be had")
+    assert(contains(message, JSON_URL) and contains(message, HANDSHAKE_TIMEOUT), message)
+    assert(not contains(message, "first failure") and not contains(message, "second failure"), message)
+    assert(contains(message, "after 3 attempts"), message)
+
+    -- A status says so in the same way, and the page is no different from the JSON.
+    setup("linux", "amd64")
+    answers[PAGE_URL] = { status_code = 503, body = "Service Unavailable", headers = {} }
+    message = failure(plugin.Available, {})
+    assert(asked(PAGE_URL) == 3, "asked for the page " .. asked(PAGE_URL) .. " times, not 3")
+    assert(contains(message, PAGE_URL) and contains(message, "503") and contains(message, "after 3 attempts"), message)
 end)
 
 print(cases .. " cases passed")

@@ -39,21 +39,38 @@ function getOsTypeAndArch()
     }
 end
 
---- Fetches a page of go.dev. A page that cannot be had fails with what went wrong: the failure of the request, which
---- names the address, or the status that go.dev answered with.
+--- How many times a page of go.dev is asked for before the plugin gives up on it, the first time included. The http
+--- module of vfox never tries again, and ends a TLS handshake that takes more than 10 seconds. A connection that is slow
+--- only the first time, as through a proxy that has yet to dial go.dev, fails the first request and lets the next one
+--- through. Running the same command a second time was the retry that was needed.
+local ATTEMPTS = 3
+
+--- Fetches a page of go.dev. A request that fails, and an answer with a server error (a status of 500 or more), are
+--- made again, up to ATTEMPTS times in all. There is no pause in between: vfox has no sleep for a plugin, and a failure
+--- of this kind has waited a while already. Any other status is what go.dev means, so it is not made again.
+--- A page that cannot be had fails with what went wrong the last time: the failure of the request, which names the
+--- address, or the status that go.dev answered with. The number of attempts follows when there were more than one.
 --- @param url string
 --- @return string The body of the page
 local function fetch(url)
-    local resp, err = http.get({
-        url = url,
-    })
-    if err ~= nil then
-        error("cannot list the Go releases: " .. tostring(err), 0)
+    local reason
+    for _ = 1, ATTEMPTS do
+        local resp, err = http.get({
+            url = url,
+        })
+        if err == nil and resp.status_code == 200 then
+            return resp.body
+        end
+        if err ~= nil then
+            reason = tostring(err)
+        else
+            reason = url .. " answered with status " .. tostring(resp.status_code)
+        end
+        if err == nil and resp.status_code < 500 then
+            error("cannot list the Go releases: " .. reason, 0)
+        end
     end
-    if resp.status_code ~= 200 then
-        error("cannot list the Go releases: " .. url .. " answered with status " .. tostring(resp.status_code), 0)
-    end
-    return resp.body
+    error(("cannot list the Go releases: %s (after %d attempts)"):format(reason, ATTEMPTS), 0)
 end
 
 function getReleases(mirror)
