@@ -108,6 +108,13 @@ Pushing a version tag publishes too, when `PLUGIN.version` already matches the t
 
 The package holds `metadata.lua`, `hooks/` and `lib/`, and the license. Documentation, tests, workflows and the dev container are not part of it. Because `stylua.toml` is in the repository, the shared check also runs StyLua 2.5.2 over the Lua, so format with that version before you push, see [e2e.md](e2e.md#local-checks).
 
+### After a release
+
+The documentation marks what is newer than the last release with "Unreleased" ("未发布" in Chinese). A change that a user notices adds its entry to [changes.md](changes.md) under "Unreleased", in both languages, in the pull request that makes it. Once the release is out:
+
+1. Move those entries in [changes.md](changes.md) under the new version, with the date of the release, and take the remarks out, in both languages: `grep -rn -i -e unreleased -e 未发布 docs README*`. The heading "Unreleased" goes, and so does the sentence at the top of the page that says `main` is ahead of the newest release.
+2. Search for the number of the previous release: a few sentences compare against it without saying "Unreleased".
+
 ## Writing the docs
 
 English pages are in `docs/`, the Chinese ones in `docs/zh-CN/` under the same names (the Chinese README is `README_CN.md`), and each page starts with a link to the other language. A new page goes into the Documentation list of both READMEs. Nothing in CI checks the commands in them, so run what you add.

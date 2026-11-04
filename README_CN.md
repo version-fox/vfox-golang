@@ -32,7 +32,7 @@ vfox install golang@1.20          # 1.21 之前，每个系列的第一个版本
 vfox install golang@1.27rc3       # 候选版本和 beta 版本也在列表里
 ```
 
-`1.24` 或 `1` 不是一个版本，安装会以 `No Go release found for "1.24" on linux/amd64` 停下，所以请从 `vfox search golang` 里复制版本号。搜索、安装、使用、卸载以及平台的细节见 [docs/zh-CN/versions.md](docs/zh-CN/versions.md)。
+`1.24` 或 `1` 不是一个版本。未发布：安装会以 `No Go release found for "1.24" on linux/amd64` 停下，0.4.1 则打印 `Install golang@ success!`，什么也不装。请从 `vfox search golang` 里复制版本号。搜索、安装、使用、卸载以及平台的细节见 [docs/zh-CN/versions.md](docs/zh-CN/versions.md)。
 
 ## 环境变量
 
@@ -75,6 +75,7 @@ export VFOX_GOLANG_GOPATH="$HOME/go"
 - [GOPATH 与环境变量](docs/zh-CN/gopath.md)：插件设置了什么，以及在各个版本之间共享 `GOPATH`
 - [镜像](docs/zh-CN/mirror.md)：go.dev 很慢时让下载经过镜像
 - [问题排查](docs/zh-CN/troubleshooting.md)：vfox 和插件的各种提示、代理设置和 Go 的位置
+- [变更记录](docs/zh-CN/changes.md)：每个版本改了什么
 
 **参与开发**
 

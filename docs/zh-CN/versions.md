@@ -33,7 +33,7 @@ vfox 会把这个列表缓存 12 小时（`vfox config --list` 里的 `cache.ava
 | `1.27rc3` | 一个候选版本 |
 | `1.5beta2` | 一个 beta 版本 |
 
-插件把你写的和列表里的名字逐个字符比较。`1.24` 和 `1` 一个也匹配不上，go.dev 从未发布过的版本（`1.99.99`）也一样。这时 `vfox install` 会以 `No Go release found for "1.24" on linux/amd64` 停下，什么也不装。0.4.1 及之前的插件把这当成了成功：它们打印 `Install golang@ success!` 并以 0 退出。不写版本的 `vfox install golang` 会以 `install requires specifying a version for golang` 退出。
+插件把你写的和列表里的名字逐个字符比较。`1.24` 和 `1` 一个也匹配不上，go.dev 从未发布过的版本（`1.99.99`）也一样。未发布：这时 `vfox install` 会以 `No Go release found for "1.24" on linux/amd64` 停下，什么也不装。0.4.1 及之前的版本把这当成成功：它们打印 `Install golang@ success!` 并以 0 退出。不写版本的 `vfox install golang` 会以 `install requires specifying a version for golang` 退出。
 
 ## 安装
 

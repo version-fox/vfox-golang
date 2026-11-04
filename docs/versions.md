@@ -33,7 +33,7 @@ A version is the name of the release on go.dev without the `go` in front, writte
 | `1.27rc3` | a release candidate |
 | `1.5beta2` | a beta |
 
-The plugin compares what you write with the names in the list, letter for letter. `1.24` and `1` match none, and neither does a release go.dev has never published (`1.99.99`). `vfox install` then stops with `No Go release found for "1.24" on linux/amd64`, and installs nothing. Plugin 0.4.1 and before took this for a success: they printed `Install golang@ success!` and exited with 0. `vfox install golang` without a version stops with `install requires specifying a version for golang`.
+The plugin compares what you write with the names in the list, letter for letter. `1.24` and `1` match none, and neither does a release go.dev has never published (`1.99.99`). Unreleased: `vfox install` then stops with `No Go release found for "1.24" on linux/amd64`, and installs nothing. Release 0.4.1 and before take this for a success: they print `Install golang@ success!` and exit with 0. `vfox install golang` without a version stops with `install requires specifying a version for golang`.
 
 ## Installing
 
