@@ -67,6 +67,16 @@ export VFOX_GOLANG_GOPATH="$HOME/go"
 
 On PowerShell, use `$env:VFOX_GOLANG_GOPATH = "$HOME\go"` before activation. Several paths are separated by `:` on Unix or `;` on Windows, and the `bin` directory of each is added to the `PATH`. Packages that are already there are not moved; Go creates directories as it needs them. Unset the variable to return to a `GOPATH` for each release. The plugin deliberately does not inherit `GOPATH` from the environment, which may point to a previously selected vfox Go release. See [docs/gopath.md](docs/gopath.md).
 
+## Releasing this plugin
+
+A maintainer publishes a new version from **Actions → Plugin → Run workflow** on the default branch, entering a stable plugin version, `X.Y.Z`, without the `v` prefix. From a terminal:
+
+```bash
+gh workflow run publish.yaml --repo version-fox/vfox-golang --ref main -f version=X.Y.Z
+```
+
+The shared workflow, [plugin-manifest-action](https://github.com/version-fox/plugin-manifest-action), sets `PLUGIN.version` in `metadata.lua`, creates the version commit and the tag, and publishes the ZIP and the manifest in this repository. No local tag or extra release token is needed, and pull requests run the checks only. Once the release is out, move the "Unreleased" entries of [docs/changes.md](docs/changes.md) under the new version. See [docs/development.md](docs/development.md#releasing) for publishing by a tag, resuming a failed run, what the package holds and when `vfox add golang` serves the new version.
+
 ## Documentation
 
 **Using the plugin**

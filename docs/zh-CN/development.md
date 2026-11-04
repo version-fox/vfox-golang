@@ -107,7 +107,7 @@ Lint、E2E 测试和开发容器见 [e2e.md](e2e.md)。
 
 维护者在默认分支上从 **Actions → Plugin → Run workflow** 发布，输入不带 `v` 前缀的稳定插件版本。共享工作流 [plugin-manifest-action](https://github.com/version-fox/plugin-manifest-action) 会更新 `metadata.lua`，创建版本提交和 tag，并在本仓库发布 ZIP 和 manifest。不需要本地 tag，也不需要额外的发布令牌。Pull request 只运行检查；PR 标题不再触发发布。
 
-推送版本 tag 同样会发布，前提是 `PLUGIN.version` 已经与 tag 一致。发布失败时，重新运行最初失败的那个任务即可续上。工作流跟随共享的 `@v1` 发布工具，更新这个工具不会发布本插件。包的约定和首次接入的要求，见[共享工作流文档](https://github.com/version-fox/plugin-manifest-action)。
+推送版本 tag 同样会发布，前提是 `PLUGIN.version` 已经与 tag 一致。发布失败时，重新运行最初失败的那个任务即可续上。工作流跟随共享的 `@v1` 发布工具，更新这个工具不会发布本插件。包的约定和首次接入的要求，见[共享工作流文档](https://github.com/version-fox/plugin-manifest-action)。之后，[vfox-plugins](https://github.com/version-fox/vfox-plugins) 里的 `plugins/golang.json` 会显示 `vfox add golang` 提供的版本。注册表在同步时才会接手新发布的版本，它每小时同步一次，所以可能要等一个小时左右。
 
 包里有 `metadata.lua`、`hooks/`、`lib/` 和许可证。文档、测试、工作流和开发容器都不在其中。因为仓库里有 `stylua.toml`，共享检查还会用 StyLua 2.5.2 检查 Lua，所以推送之前请用这个版本格式化，见 [e2e.md](e2e.md#本地检查)。
 
