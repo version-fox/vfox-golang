@@ -2,9 +2,9 @@
 
 [中文](zh-CN/changes.md) | [English](changes.md)
 
-What changed in each release, as a user notices it. GitHub's release pages list the pull requests. The newest release at the time of writing is 0.4.1, and `main` is ahead of it by everything under "Unreleased". [install-from-source.md](install-from-source.md) gets you those changes now.
+What changed in each release, as a user notices it. GitHub's release pages list the pull requests.
 
-## Unreleased
+## 0.4.2 (2026-11-04)
 
 - A version that is no release stops the install. `vfox install golang@1.24`, `golang@1`, and a version that go.dev never published, such as `golang@1.99.99`, fail with ``No Go release found for "1.24" on linux/amd64. `vfox search golang` lists the releases.`` and install nothing. Release 0.4.1 prints `Install golang@ success!` and exits with 0, though nothing was installed. `1.24` and `1` are no releases: the first release of the 1.24 line is `1.24.0`, and `vfox search golang` lists every name as it has to be written. See [versions.md](versions.md#naming) ([#23](https://github.com/version-fox/vfox-golang/pull/23)).
 - A space in the path of a release no longer sends `PostInstall` astray, as in a home directory like `/home/John Doe` or a `VFOX_HOME` that has one. Release 0.4.1 gives `mkdir` the path without quotes, so `mkdir` makes one directory out of each word, in the wrong places, and not the `packages/bin` of the release. `go install` makes that directory when it first installs a command, so nothing else broke. Now the path is quoted. On Windows the quotes need vfox 1.0.13 or later, which gives the command to `cmd` as written ([vfox#712](https://github.com/version-fox/vfox/pull/712)). vfox 1.0.12 and before spoil them, so there a path with a space still does not get its `packages/bin`, and a path without one works as it always did. See [development.md](development.md#known-gaps) ([#23](https://github.com/version-fox/vfox-golang/pull/23)).

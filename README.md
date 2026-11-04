@@ -32,7 +32,7 @@ vfox install golang@1.20          # the first release of a line before 1.21 has 
 vfox install golang@1.27rc3       # release candidates and betas are listed too
 ```
 
-`1.24` or `1` is no release. Unreleased: the install stops with `No Go release found for "1.24" on linux/amd64`, where release 0.4.1 prints `Install golang@ success!` and installs nothing. Copy the version from `vfox search golang`. See [docs/versions.md](docs/versions.md) for searching, installing, using and uninstalling, and for the platforms.
+`1.24` or `1` is no release. The install stops with `No Go release found for "1.24" on linux/amd64`, where release 0.4.1 and before print `Install golang@ success!` and install nothing. Copy the version from `vfox search golang`. See [docs/versions.md](docs/versions.md) for searching, installing, using and uninstalling, and for the platforms.
 
 ## Environment
 
