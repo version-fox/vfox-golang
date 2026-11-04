@@ -1,0 +1,96 @@
+# Copyright 2026 Han Li and contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: E2E
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # A new push to a pull request replaces the run of the push before it. Every
+  # commit on main gets a group of its own instead: in one shared group a newer
+  # commit cancels the run of the older, and re-running the older cancels the
+  # newer in turn, so one of the two never ends with a result.
+  group: e2e-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The Linux job runs the container suite natively on the runner, the way the dev
+# container runs it locally: Node.js at the dev container's version
+# (.devcontainer/Dockerfile) plus the runner's stock Docker, with the same
+# TESTCONTAINERS_RYUK_DISABLED knob. The suite is written in Node.js rather than
+# Go on purpose: this is the plugin that installs Go, and a Go toolchain on the
+# runner would be one more to tell from the ones the tests install.
+#
+# The Windows jobs run the native suite: no container, because the runner is the
+# machine to try the plugin on, and Windows containers would stand in for a
+# Windows that is already there. The runner image has a Go of its own, which the
+# suite keeps out of reach (tests/e2e/src/native.ts), and it installs vfox and a
+# real Go release for a user it makes up. See docs/e2e.md.
+
+jobs:
+  e2e-linux:
+    name: Linux container (${{ matrix.runs-on }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 45
+    env:
+      # Ryuk publishes a port on the host daemon and waits for the suite to dial
+      # back to it; the dev container disables it (it runs Docker-out-of-Docker),
+      # and CI matches so both paths stay identical. The suite removes its
+      # containers and its image itself instead.
+      TESTCONTAINERS_RYUK_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: tests/e2e/.node-version
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      - run: npm test
+        working-directory: tests/e2e
+
+  e2e-windows:
+    name: Windows (${{ matrix.runs-on }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [windows-latest, windows-11-arm]
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: tests/e2e/.node-version
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+        working-directory: tests/e2e
+      # PowerShell 7 (pwsh) is on the runner image; the suite drives vfox through it.
+      - run: npm run test:native
+        working-directory: tests/e2e

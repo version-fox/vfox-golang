@@ -1,0 +1,23 @@
+{
+    "name": "vfox-golang-e2e",
+    "private": true,
+    "type": "module",
+    "description": "Container end-to-end tests of the vfox golang plugin, driven by testcontainers for Node.js",
+    "engines": {
+        "node": ">=24"
+    },
+    "scripts": {
+        "test": "node --test --test-reporter=spec test/e2e.test.ts",
+        "test:native": "node --test --test-reporter=spec test/e2e.native.test.ts",
+        "test:unit": "node --test --test-reporter=spec \"test/*.unit.test.ts\"",
+        "typecheck": "tsc --noEmit",
+        "lint": "biome check .",
+        "format": "biome check --write ."
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.6.4",
+        "@types/node": "^26.6.6",
+        "testcontainers": "^12.2.1",
+        "typescript": "^7.0.2"
+    }
+}
