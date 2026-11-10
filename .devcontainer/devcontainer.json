@@ -1,0 +1,19 @@
+{
+  "name": "vfox-golang (Linux)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "mounts": [
+    "source=${localEnv:DOCKER_SOCK:/var/run/docker.sock},target=/var/run/docker.sock,type=bind"
+  ],
+  "containerEnv": {
+    "TESTCONTAINERS_RYUK_DISABLED": "true"
+  },
+  "postCreateCommand": "cd tests/e2e && npm ci",
+  "customizations": {
+    "vscode": {
+      "extensions": ["sumneko.lua", "johnnymorganz.stylua", "biomejs.biome"]
+    }
+  }
+}

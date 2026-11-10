@@ -1,0 +1,93 @@
+# Copyright 2026 Han Li and contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-lua:
+    runs-on: ubuntu-latest
+    env:
+      # Keep these in step with .devcontainer/Dockerfile. The downloads are pinned
+      # by checksum, as the actions are pinned by their commits; change a version
+      # and its checksum together to move to another release.
+      STYLUA_VERSION: 2.5.2
+      STYLUA_SHA256: bcb0d855e91f102f28a370e850f8566b3b44b79e6274d806ea5246837c0fd5ab
+      LUA_LANGUAGE_SERVER_VERSION: 3.19.1
+      LUA_LANGUAGE_SERVER_SHA256: e9235d2d72ef55bc41cf8c99cda2ed64777682024b4bb81f5dea425060c5cbb8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install StyLua
+        run: |
+          archive="$RUNNER_TEMP/stylua.zip"
+          curl --fail --silent --show-error --location --output "$archive" \
+            "https://github.com/JohnnyMorganz/StyLua/releases/download/v${STYLUA_VERSION}/stylua-linux-x86_64.zip"
+          echo "$STYLUA_SHA256  $archive" | sha256sum --check
+          unzip -q "$archive" -d "$RUNNER_TEMP/stylua"
+          echo "$RUNNER_TEMP/stylua" >> "$GITHUB_PATH"
+      - name: Install lua-language-server
+        run: |
+          archive="$RUNNER_TEMP/lua-language-server.tar.gz"
+          curl --fail --silent --show-error --location --output "$archive" \
+            "https://github.com/LuaLS/lua-language-server/releases/download/${LUA_LANGUAGE_SERVER_VERSION}/lua-language-server-${LUA_LANGUAGE_SERVER_VERSION}-linux-x64.tar.gz"
+          echo "$LUA_LANGUAGE_SERVER_SHA256  $archive" | sha256sum --check
+          mkdir "$RUNNER_TEMP/lua-language-server"
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP/lua-language-server"
+          echo "$RUNNER_TEMP/lua-language-server/bin" >> "$GITHUB_PATH"
+      - name: Check Lua formatting
+        run: stylua --check .
+      - name: Check Lua
+        run: lua-language-server --check . --checklevel=Warning
+
+  lint-e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/e2e
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: tests/e2e/.node-version
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+      - name: Check types
+        run: npm run typecheck
+      - name: Check formatting and lint
+        run: npm run lint
+      # The helpers of the container tests, and that the versions pinned in the
+      # workflows and the dev container agree. No Docker is needed.
+      - name: Run unit tests
+        run: npm run test:unit
+
+  lint-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Check the workflows with actionlint
+        run: docker run --rm --volume "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
