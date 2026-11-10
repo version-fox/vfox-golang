@@ -70,6 +70,24 @@ vfox uninstall golang@1.24.0
 
 Write the version as `vfox list golang` shows it.
 
+## An installation that is already there
+
+When another tool already put a Go on the machine, adopting it beats downloading a second copy:
+
+```bash
+vfox link --detect golang
+```
+
+`Detect` looks for the installations of mise, asdf, goenv, gvm, Homebrew, the official installer, the system package manager and Scoop, and for the Go that `GOROOT` points at, and registers the one you choose. Nothing is downloaded or copied: the release stays where it is, vfox only links to it, and `vfox doctor` keeps watching it. Afterwards select it with `vfox use` as usual. Needs vfox 1.1.0 or later, which is where `vfox link` comes from.
+
+A directory the detection does not find is adopted by hand, with the version written the way `vfox list golang` shows versions:
+
+```bash
+vfox link golang@1.23.1 /path/to/goroot
+```
+
+The directory has to be the `GOROOT`: the one with `bin/go` in it and a `VERSION` file naming the release.
+
 ## Platforms
 
 The plugin lists the releases that go.dev has an archive of for the platform vfox runs on: Linux, macOS and Windows. A release older than the first one for a platform is not listed. On 2026-11-04 `vfox search golang` listed:

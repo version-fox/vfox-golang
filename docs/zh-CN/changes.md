@@ -2,7 +2,12 @@
 
 [中文](changes.md) | [English](../changes.md)
 
-按发布版本列出用户能感受到的变化。GitHub 的 Release 页面列出了对应的 PR。
+按发布版本列出用户能感受到的变化。GitHub 的 Release 页面列出了对应的 PR。写这句话时最新的版本是 0.4.2，`main` 比它多出的都在“未发布”下面。照 [install-from-source.md](install-from-source.md) 装，就能现在用上这些变化。
+
+## 未发布
+
+- 别的工具装好的 Go 可以直接认领，不必再下载一份。`vfox link --detect golang` 会查找 mise、asdf、goenv、gvm、Homebrew、官方安装包、系统包管理器和 Scoop 装好的 Go，以及 `GOROOT` 当前指向的 Go，选中后注册给 vfox；整个过程不下载、不复制。以前每个安装都要拿着目录手工链接。需要 vfox 1.1.0 或更高版本，`vfox link` 从那里开始才有。见 [versions.md](versions.md#已经装好的-go)（[#26](https://github.com/version-fox/vfox-golang/pull/26)）。
+- 别的的可执行文件挡住插件的 `go` 时，`vfox use` 和 `vfox doctor` 现在会说明怎么办：删掉那个 Go，或者像上面那样认领它。建议覆盖了 mise 和 asdf 的 shim、Homebrew、系统和官方安装、goenv、gvm、snap、Scoop 和 Chocolatey。以前只报告挡住了，没有针对这些安装的建议。见 [troubleshooting.md](troubleshooting.md#别的-go-排在前面)（[#26](https://github.com/version-fox/vfox-golang/pull/26)）。
 
 ## 0.4.2（2026-11-04）
 

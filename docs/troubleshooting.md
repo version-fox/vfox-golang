@@ -59,3 +59,9 @@ To see what vfox does with a hook, and the errors it swallows, run it with `vfox
 ```bash
 vfox --debug install golang@1.24.0
 ```
+
+## Another Go comes first
+
+`go version` after `vfox use` names a release vfox does not have selected, or `go` is not vfox's at all: another executable sits earlier in `PATH`, a shim of mise or asdf, Homebrew's, or a Go the system installed. `vfox doctor` names the executable and the plugin's advice for it. Either remove the other Go, or adopt it with [`vfox link --detect golang`](versions.md#an-installation-that-is-already-there) instead of downloading it again.
+
+When two managers are active in one shell, let one of them own Go. Both vfox and managers like mise set `GOROOT`: the one that activates last wins the variable, while the order of `PATH` decides which `go` runs, and a `go` with another manager's `GOROOT` does not build. mise also reads `go.mod` and `go.work` toolchain lines and `.go-version` files by itself, so the two can disagree about which Go a project gets.

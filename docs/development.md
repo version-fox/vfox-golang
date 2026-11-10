@@ -10,12 +10,14 @@ hooks/available.lua             vfox search
 hooks/pre_install.lua           vfox install: choose the archive
 hooks/post_install.lua          creates the bin directory of the GOPATH
 hooks/env_keys.lua              GOROOT, GOPATH and PATH
+hooks/detect.lua                vfox link --detect: the Go installations already on the machine
 lib/constants.lua               the address of go.dev
 lib/utils.lua                   the releases that go.dev lists
 Injection.lua                   type hints for what vfox injects, never loaded
 tests/env_keys_test.lua         EnvKeys: GOROOT, GOPATH and PATH, with and without VFOX_GOLANG_GOPATH
 tests/releases_test.lua         Available and PreInstall, against the saved answers of go.dev
 tests/post_install_test.lua     the command PostInstall runs, with os.execute replaced
+tests/detect_test.lua           Detect and the shadow hints, with stubbed directory listings
 tests/fixtures/                 the saved answers of go.dev, see the README there
 tests/e2e/                      E2E tests: containers on Linux, the machine itself on Windows, see e2e.md
 .devcontainer/                  the dev container, see e2e.md
@@ -34,6 +36,8 @@ vfox loads `metadata.lua`, calls a hook when a command needs it, and puts `PLUGI
 | `vfox search golang` | `Available`, unless vfox has an answer of the last 12 hours |
 | `vfox install golang@1.24.0` | `PreInstall` returns the URL, the checksum and the name. vfox downloads, verifies and unpacks, then calls `PostInstall` |
 | `vfox use golang@1.24.0` | `EnvKeys` provides the variables |
+| `vfox link golang@1.23.1 /path/to/goroot` | none by the plugin: vfox checks the directory through `EnvKeys` |
+| `vfox link --detect golang` | `Detect` lists the installations already on the machine |
 | `vfox uninstall golang@1.24.0` | none |
 
 ## How the releases are found
@@ -57,6 +61,8 @@ A few that cost time to find:
 - `version` becomes the name of the install: the directory is `v-<version>` and `vfox list` shows it. Go 1.20 and before call the first release of a line `1.20`, and the plugin keeps that.
 - `PreInstall` fails with an error for a version it finds no release of. An empty result would do worse: vfox 1.0.13 takes it for an install, prints `Install golang@ success!`, exits with 0 and installs nothing, which is what plugin 0.4.1 and before did.
 - `EnvKeys` does not read `GOPATH` of the environment: vfox exports one for the release selected before, and reading it would keep the old packages. `VFOX_GOLANG_GOPATH` is the one input, see [gopath.md](gopath.md).
+- `Detect` names an installation by reading files only: the `VERSION` file in a `GOROOT` gives the version (`go1.23.0` is `1.23.0`), and `bin/go` (`bin/go.exe` on Windows) proves it runs. What it returns is the `GOROOT` directory, the same directory `EnvKeys` takes as its path, so `vfox link` can adopt it. A directory without either is skipped, and so is a version name vfox cannot link. The hook is optional and needs vfox 1.1.0 or later: an older vfox never loads the file, which is why `minRuntimeVersion` stays where it is.
+- `shadowHints` in `metadata.lua` explains the usual installations when one of their executables shadows the plugin's `go`. vfox finds the shadowing itself, on every `vfox use` and in `vfox doctor`; the plugin only matches the path and adds the message. Older vfox versions ignore the field.
 - vfox keeps the answer of `Available` for 12 hours in `plugin/golang/.available.cache`. `PreInstall` is not cached.
 - A hook runs in vfox's Lua 5.1 (GopherLua). `os.execute` is there, but a test run disables it, see below.
 - `PostInstall` gives the path of the release to `os.execute` as one word: in single quotes on Unix, with a quote in the path closed, escaped and opened again. On Windows the path goes in double quotes when `cmd` would read part of it as syntax, which a space is, and so are `& | < > ^ ( ) , ; =`, and stays as it is otherwise. The reason is how vfox hands the command to `cmd`. From 1.0.13 on it does so as written ([vfox#712](https://github.com/version-fox/vfox/pull/712)). Before, Go turned each `"` into `\"`, which `cmd` misreads (the change in vfox#712 says so): a path in quotes would not give the directory it names, for every Windows user of those versions and not only for those with a space in the path. That is why a path with nothing special in it stays without quotes, as it always was.

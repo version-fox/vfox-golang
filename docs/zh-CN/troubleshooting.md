@@ -59,3 +59,9 @@ vfox 会把 `vfox search golang` 的结果缓存 12 小时。`vfox install` 不�
 ```bash
 vfox --debug install golang@1.24.0
 ```
+
+## 别的 Go 排在前面
+
+`vfox use` 之后 `go version` 报的不是 vfox 选中的版本，或者 `go` 根本不是 vfox 的：`PATH` 里有另一个可执行文件排在前面，可能是 mise 或 asdf 的 shim、Homebrew 的 Go，或者系统装的 Go。`vfox doctor` 会指出是哪个可执行文件，以及插件针对它的建议：删掉那个 Go，或者用 [`vfox link --detect golang`](versions.md#已经装好的-go) 认领它，而不必再下载一份。
+
+同一个 shell 里同时开着两个版本管理器时，让其中一个管 Go 就好。vfox 和 mise 这类管理器都会设置 `GOROOT`：最后激活的那个赢得这个变量，而 `PATH` 的顺序决定跑的是哪个 `go`，拿着别家 `GOROOT` 的 `go` 编译会出错。mise 还会自己读 `go.mod`、`go.work` 里的 toolchain 行和 `.go-version` 文件，两家可能对一个项目该用哪个 Go 各执一词。

@@ -236,10 +236,12 @@ end)
 case("A failed request is reported with the address and what went wrong", function()
     setup("linux", "amd64")
     answers[JSON_URL] = { failure = "connection refused" }
+    -- vfox 1.1.0 and later mask the values of a query in the error of a request, so ?mode=json reads ?mode=xxxxx
+    -- there. The address is checked without its query, which names it on every version.
     local message = failure(plugin.Available, {})
-    assert(contains(message, "connection refused") and contains(message, JSON_URL), message)
+    assert(contains(message, "connection refused") and contains(message, "https://go.dev/dl/"), message)
     message = failure(plugin.PreInstall, { version = "latest" })
-    assert(contains(message, "connection refused") and contains(message, JSON_URL), message)
+    assert(contains(message, "connection refused") and contains(message, "https://go.dev/dl/"), message)
 
     setup("linux", "amd64")
     answers[PAGE_URL] = { failure = "no route to host" }
@@ -316,7 +318,8 @@ case("The retries end: three attempts, and the failure of the last one is report
     local message = failure(plugin.PreInstall, { version = "1.27.3" })
     assert(asked(JSON_URL) == 3, "asked for the JSON " .. asked(JSON_URL) .. " times, not 3")
     assert(asked(PAGE_URL) == 0, "the page is not asked for when the JSON cannot be had")
-    assert(contains(message, JSON_URL) and contains(message, HANDSHAKE_TIMEOUT), message)
+    -- The address without its query, as above: vfox 1.1.0 and later mask it in the error of a request.
+    assert(contains(message, "https://go.dev/dl/") and contains(message, HANDSHAKE_TIMEOUT), message)
     assert(not contains(message, "first failure") and not contains(message, "second failure"), message)
     assert(contains(message, "after 3 attempts"), message)
 

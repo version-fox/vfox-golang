@@ -30,8 +30,8 @@ jobs:
       # checksum checked, as the actions are pinned by their commits; change the
       # two together to move to another release. Keep VFOX_VERSION in step with
       # .devcontainer/Dockerfile.
-      VFOX_VERSION: 1.0.13
-      VFOX_SHA256: 7ad0a4c82c8173f09393e09abecc3e27468253bab5fe53ffbf58f2b12b3fc768
+      VFOX_VERSION: 1.1.0
+      VFOX_SHA256: 3b33c3c468b27bc17aecf0d6d3af24fe49fe204972984904a136a47b402a0ee4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

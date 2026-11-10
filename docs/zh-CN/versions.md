@@ -70,6 +70,24 @@ vfox uninstall golang@1.24.0
 
 版本按 `vfox list golang` 显示的写法来写。
 
+## 已经装好的 Go
+
+如果别的工具已经在这台机器上装了 Go，直接认领它，比再下载一份更省事：
+
+```bash
+vfox link --detect golang
+```
+
+`Detect` 会查找 mise、asdf、goenv、gvm、Homebrew、官方安装包、系统包管理器和 Scoop 装好的 Go，以及 `GOROOT` 当前指向的 Go，选中后注册给 vfox。整个过程不下载、不复制：版本留在原地，vfox 只链接过去，`vfox doctor` 也会继续照看它。之后照常用 `vfox use` 选用它。需要 vfox 1.1.0 或更高版本，`vfox link` 从那里开始才有。
+
+没被找到的目录可以手工认领，版本按 `vfox list golang` 显示的写法来写：
+
+```bash
+vfox link golang@1.23.1 /path/to/goroot
+```
+
+这个目录必须是 `GOROOT`：里面有 `bin/go`，还有写明版本名的 `VERSION` 文件。
+
 ## 平台
 
 插件列出的是 go.dev 为 vfox 所在平台提供压缩包的版本：Linux、macOS 和 Windows。早于某个平台的第一个版本的，不会列出。2026-11-04 那天，`vfox search golang` 列出的数量：

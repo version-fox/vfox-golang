@@ -10,12 +10,14 @@ hooks/available.lua             vfox search
 hooks/pre_install.lua           vfox install：选出压缩包
 hooks/post_install.lua          创建 GOPATH 的 bin 目录
 hooks/env_keys.lua              GOROOT、GOPATH 和 PATH
+hooks/detect.lua                vfox link --detect：机器上已经装好的 Go
 lib/constants.lua               go.dev 的地址
 lib/utils.lua                   go.dev 列出的版本
 Injection.lua                   vfox 注入内容的类型提示，不会被加载
 tests/env_keys_test.lua         EnvKeys：GOROOT、GOPATH 和 PATH，设置与不设置 VFOX_GOLANG_GOPATH
 tests/releases_test.lua         Available 和 PreInstall，针对保存下来的 go.dev 的应答
 tests/post_install_test.lua     PostInstall 运行的命令，os.execute 被替换掉
+tests/detect_test.lua           Detect 和 shadow hints，目录列表由 stub 提供
 tests/fixtures/                 保存下来的 go.dev 的应答，见那里的 README
 tests/e2e/                      E2E 测试：Linux 上用容器，Windows 上用机器本身，见 e2e.md
 .devcontainer/                  开发容器，见 e2e.md
@@ -34,6 +36,8 @@ vfox 加载 `metadata.lua`，在命令需要时调用 hook，并提供 `PLUGIN` 
 | `vfox search golang` | `Available`，除非 vfox 有最近 12 小时内的结果 |
 | `vfox install golang@1.24.0` | `PreInstall` 返回地址、校验和和名字。vfox 下载、校验、解压，然后调用 `PostInstall` |
 | `vfox use golang@1.24.0` | `EnvKeys` 提供环境变量 |
+| `vfox link golang@1.23.1 /path/to/goroot` | 插件不做什么：vfox 通过 `EnvKeys` 检查这个目录 |
+| `vfox link --detect golang` | `Detect` 列出机器上已经装好的 Go |
 | `vfox uninstall golang@1.24.0` | 无 |
 
 ## 版本是怎么找到的
@@ -57,6 +61,8 @@ vfox 加载 `metadata.lua`，在命令需要时调用 hook，并提供 `PLUGIN` 
 - `version` 会成为安装的名字：目录是 `v-<version>`，`vfox list` 也显示它。Go 1.20 及更早的版本把一个系列的第一个版本叫 `1.20`，插件照原样保留。
 - 找不到版本时，`PreInstall` 要用 error 报错。返回空结果更糟：vfox 1.0.13 会把它当成一次安装，打印 `Install golang@ success!`、以 0 退出，却什么也没装，0.4.1 及之前的插件就是这样。
 - `EnvKeys` 不读环境里的 `GOPATH`：vfox 会为之前选中的版本导出一个，读它就会沿用旧的包。唯一的输入是 `VFOX_GOLANG_GOPATH`，见 [gopath.md](gopath.md)。
+- `Detect` 只靠读文件来认出一个安装：`GOROOT` 里的 `VERSION` 文件给出版本（`go1.23.0` 就是 `1.23.0`），`bin/go`（Windows 上是 `bin/go.exe`）证明它能运行。它返回的是 `GOROOT` 目录，也就是 `EnvKeys` 所要的那个目录，所以 `vfox link` 可以直接认领。两者缺其一的目录会被跳过，vfox 链不上的版本名也会被跳过。这个 hook 是可选的，需要 vfox 1.1.0 或更高版本：老 vfox 根本不会加载这个文件，所以 `minRuntimeVersion` 保持不动。
+- `metadata.lua` 里的 `shadowHints` 解释了挡住插件的 `go` 的那些常见安装。找“挡住”这件事是 vfox 自己做的，每次 `vfox use` 和 `vfox doctor` 都会做；插件只匹配路径、附上建议。老 vfox 会忽略这个字段。
 - vfox 把 `Available` 的结果缓存 12 小时，存在 `plugin/golang/.available.cache`。`PreInstall` 不缓存。
 - hook 运行在 vfox 的 Lua 5.1（GopherLua）里。`os.execute` 是有的，但测试运行时会禁用它，见下面。
 - `PostInstall` 把版本目录的路径作为一个词交给 `os.execute`：Unix 上放在单引号里，路径里的引号会先关闭、转义、再重新打开。Windows 上，只要 `cmd` 会把路径的一部分当成语法，就放在双引号里，空格算，`& | < > ^ ( ) , ; =` 也算；否则保持原样。原因在于 vfox 怎样把命令交给 `cmd`：1.0.13 起原样交给它（[vfox#712](https://github.com/version-fox/vfox/pull/712)）；在那之前，Go 会把每个 `"` 变成 `\"`，`cmd` 会读错它（vfox#712 的修改里就是这么说的）：加了引号的路径得不到它所指的目录，这些版本的所有 Windows 用户都会这样，而不只是路径里有空格的那些。所以没有任何特殊字符的路径一直不加引号，和以前一样。

@@ -67,6 +67,10 @@ export VFOX_GOLANG_GOPATH="$HOME/go"
 
 在 PowerShell 里，激活之前执行 `$env:VFOX_GOLANG_GOPATH = "$HOME\go"`。多个路径在 Unix 上用 `:` 分隔，在 Windows 上用 `;` 分隔，每个路径的 `bin` 目录都会加进 `PATH`。已有的包不会被移动，Go 会按需创建目录。取消设置这个变量，就回到每个版本一个 `GOPATH`。插件有意不继承环境里的 `GOPATH`，因为它可能指向之前选中的某个 vfox Go 版本。详见 [docs/zh-CN/gopath.md](docs/zh-CN/gopath.md)。
 
+## 已经装好的 Go
+
+如果别的工具已经在这台机器上装了 Go，`vfox link --detect golang` 可以直接认领它，而不必再下载一份。`vfox use` 之后 `go` 不是 vfox 的时，`vfox doctor` 会指出是哪个可执行文件挡在前面，以及怎么办。见 [docs/zh-CN/versions.md](docs/zh-CN/versions.md#已经装好的-go) 和 [docs/zh-CN/troubleshooting.md](docs/zh-CN/troubleshooting.md#别的-go-排在前面)。
+
 ## 发布这个插件
 
 维护者在默认分支上从 **Actions → Plugin → Run workflow** 发布新版本，输入不带 `v` 前缀的稳定插件版本 `X.Y.Z`。也可以在终端里发起：

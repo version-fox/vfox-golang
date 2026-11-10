@@ -2,7 +2,12 @@
 
 [中文](zh-CN/changes.md) | [English](changes.md)
 
-What changed in each release, as a user notices it. GitHub's release pages list the pull requests.
+What changed in each release, as a user notices it. GitHub's release pages list the pull requests. The newest release at the time of writing is 0.4.2, and `main` is ahead of it by everything under "Unreleased". [install-from-source.md](install-from-source.md) gets you those changes now.
+
+## Unreleased
+
+- A Go that another tool installed can be adopted instead of downloaded again. `vfox link --detect golang` finds the installations of mise, asdf, goenv, gvm, Homebrew, the official installer, the system package manager and Scoop, and the Go that `GOROOT` points at, and registers the one you choose; nothing is downloaded or copied. Before, every installation had to be linked by hand with its directory. Needs vfox 1.1.0 or later, which is where `vfox link` comes from. See [versions.md](versions.md#an-installation-that-is-already-there) ([#26](https://github.com/version-fox/vfox-golang/pull/26)).
+- When another executable shadows the plugin's `go`, `vfox use` and `vfox doctor` now explain what to do: remove the other Go, or adopt it as above. The advice covers the shims of mise and asdf, Homebrew, system and official installations, goenv, gvm, snap, Scoop and Chocolatey. Before, the shadowing was reported without advice for these installations. See [troubleshooting.md](troubleshooting.md#another-go-comes-first) ([#26](https://github.com/version-fox/vfox-golang/pull/26)).
 
 ## 0.4.2 (2026-11-04)
 

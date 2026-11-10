@@ -67,6 +67,10 @@ export VFOX_GOLANG_GOPATH="$HOME/go"
 
 On PowerShell, use `$env:VFOX_GOLANG_GOPATH = "$HOME\go"` before activation. Several paths are separated by `:` on Unix or `;` on Windows, and the `bin` directory of each is added to the `PATH`. Packages that are already there are not moved; Go creates directories as it needs them. Unset the variable to return to a `GOPATH` for each release. The plugin deliberately does not inherit `GOPATH` from the environment, which may point to a previously selected vfox Go release. See [docs/gopath.md](docs/gopath.md).
 
+## A Go that is already installed
+
+When another tool already put a Go on the machine, `vfox link --detect golang` adopts it instead of downloading it again. When `go` does not come from vfox after `vfox use`, `vfox doctor` names the executable that shadows it and what to do. See [docs/versions.md](docs/versions.md#an-installation-that-is-already-there) and [docs/troubleshooting.md](docs/troubleshooting.md#another-go-comes-first).
+
 ## Releasing this plugin
 
 A maintainer publishes a new version from **Actions → Plugin → Run workflow** on the default branch, entering a stable plugin version, `X.Y.Z`, without the `v` prefix. From a terminal:
