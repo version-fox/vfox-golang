@@ -33,6 +33,43 @@ added to PATH. Existing packages are not moved; Go creates directories as needed
 Unset this variable to restore per-version storage. The plugin deliberately does
 not inherit `GOPATH`, which may point to a previously selected vfox Go version.
 
+## Use a Go that is already installed (mise, Homebrew, system)
+
+When another tool already put a Go on the machine, adopting it beats
+downloading a second copy:
+
+```bash
+vfox link --detect golang
+```
+
+This finds existing installations — the Go that mise, asdf, goenv, gvm,
+Homebrew, the official installer or a system package manager installed —
+and registers the chosen one with vfox. Nothing is downloaded or copied,
+and `vfox doctor` keeps reporting on linked SDKs. A directory that was not
+found can still be adopted by hand:
+
+```bash
+vfox link golang@1.23.1 /path/to/goroot
+```
+
+## When another tool's `go` shadows vfox's
+
+If `go` or `gofmt` does not come from vfox after `vfox use`, another
+executable sits earlier in `PATH` (for example mise/asdf shims, Homebrew,
+or a system Go). `vfox doctor` tells you which one and what to do about it:
+either remove the other Go, or adopt it with `vfox link --detect golang`
+as above.
+
+Two things to keep in mind when mixing managers:
+
+- Both vfox and managers like mise set `GOROOT`. Whichever activates last
+  wins the variable, while `PATH` order decides which `go` runs. A `go`
+  running with another manager's `GOROOT` breaks builds, so let one manager
+  own Go per shell.
+- mise reads `go.mod`/`go.work` toolchain lines and `.go-version` files on
+  its own. If both managers are active in one shell they can disagree about
+  which Go a project gets; pick one of them for Go.
+
 ## Releasing this plugin
 
 Maintainers can publish from **Actions → Plugin → Run workflow** on the default
