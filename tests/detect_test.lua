@@ -13,9 +13,9 @@
 -- limitations under the License.
 
 -- Detect finds the Go installations that are already on the machine, for
--- `vfox link --detect golang`. The test VM disables io.popen, so the
--- directory listings come from the stub below; the VERSION files and the
--- binaries are real fixtures under tests/fixtures/detect, read through
+-- `vfox link --detect golang`. The test VM disables io.popen, so every
+-- directory listing comes from the stub below; only the VERSION files are
+-- real fixtures under tests/fixtures/detect, read through
 -- RUNTIME.pluginDirPath so the test runs from any directory.
 
 local test = require("vfox.test")
@@ -31,15 +31,23 @@ end
 local FIX = RUNTIME.pluginDirPath .. "/tests/fixtures/detect"
 local fakeChildren = {
     [FIX .. "/mise/installs/go"] = { "1.21.5", "broken-noversion", "broken-nobinary" },
+    [FIX .. "/mise/installs/go/1.21.5/bin"] = { "go" },
+    [FIX .. "/mise/installs/go/broken-noversion/bin"] = { "go" },
     [FIX .. "/asdf/installs/golang"] = { "1.22.0" },
+    [FIX .. "/asdf/installs/golang/1.22.0/go/bin"] = { "go" },
+    [FIX .. "/official/bin"] = { "go" },
     [FIX .. "/home/sdk"] = { "go1.22.2" },
+    [FIX .. "/home/sdk/go1.22.2/bin"] = { "go" },
     [FIX .. "/home/.goenv/versions"] = { "1.21.0" },
+    [FIX .. "/home/.goenv/versions/1.21.0/bin"] = { "go" },
+    [FIX .. "/windows-goroot/bin"] = { "go.exe" },
     [FIX .. "/localappdata/mise/installs/go"] = { "1.20.0" },
+    [FIX .. "/localappdata/mise/installs/go/1.20.0/bin"] = { "go.exe" },
 }
 local seenCommands = {}
 io.popen = function(command)
     seenCommands[#seenCommands + 1] = command
-    local dir = command:match('^ls %-1 "(.-)"') or command:match('^dir /b /ad "(.-)"')
+    local dir = command:match('^ls %-1 "(.-)"') or command:match('^dir /b "(.-)"')
     local names = (dir and fakeChildren[dir]) or {}
     local i = 0
     return {
@@ -115,11 +123,11 @@ expect(winFound, "1.22.3", FIX .. "/windows-goroot")
 expect(winFound, "1.20.0", FIX .. "/localappdata/mise/installs/go/1.20.0")
 local sawDir = false
 for _, command in ipairs(seenCommands) do
-    if command:sub(1, 10) == "dir /b /ad" then
+    if command:sub(1, 8) == 'dir /b "' then
         sawDir = true
     end
 end
-assert(sawDir, "windows must list directories with dir /b /ad")
+assert(sawDir, "windows must list directories with dir /b")
 
 -- PLUGIN.shadowHints explains the usual culprits when another executable
 -- shadows the plugin's go, for `vfox use` and `vfox doctor`.

@@ -19,9 +19,9 @@
 --- another copy (for example the Go that mise, Homebrew or the system
 --- installer put on the machine).
 ---
---- Identification is file reads only: the VERSION file names the version and
---- bin/go (bin/go.exe on Windows) proves it is a runnable installation.
---- No process is started and nothing is executed.
+--- Identification lists directories and reads files only: the VERSION file
+--- names the version and a `go` (`go.exe` on Windows) in `bin` proves it is
+--- a runnable installation. Nothing inside the installations is executed.
 
 local function onWindows()
     return RUNTIME.osType == "windows"
@@ -40,7 +40,7 @@ local function listChildren(dir)
     end
     local command
     if onWindows() then
-        command = 'dir /b /ad "' .. dir:gsub('"', "") .. '" 2>nul'
+        command = 'dir /b "' .. dir:gsub('"', "") .. '" 2>nul'
     else
         command = 'ls -1 "' .. dir:gsub('"', "") .. '" 2>/dev/null'
     end
@@ -80,16 +80,17 @@ local function readVersionFile(dir)
 end
 
 local function executableExists(dir)
-    local binary = dir .. "/bin/go"
+    local want = "go"
     if onWindows() then
-        binary = binary .. ".exe"
+        want = "go.exe"
     end
-    local file = io.open(binary, "r")
-    if file == nil then
-        return false
+    for _, child in ipairs(listChildren(dir .. "/bin")) do
+        local name = child:match("([^/\\]+)$") or child
+        if name == want then
+            return true
+        end
     end
-    file:close()
-    return true
+    return false
 end
 
 --- If dir (or its go/ or libexec/ child) is a GOROOT, returns version, goroot.
